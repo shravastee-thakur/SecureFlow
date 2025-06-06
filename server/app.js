@@ -33,5 +33,6 @@ app.use(
 
 //Routes
 app.use("/api/v1/user", userRoutes);
+// http://localhost:5000/api/v1/user/register
 
 export default app;

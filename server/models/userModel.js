@@ -17,11 +17,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       select: false,
     },
-    role: {
-      type: String,
-      enum: ["user", "admin"],
-      default: "user",
-    },
+    // role: {
+    //   type: String,
+    //   enum: ["user", "admin"],
+    //   default: "user",
+    // },
     refreshToken: {
       type: String,
       default: "",
