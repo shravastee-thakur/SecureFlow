@@ -4,6 +4,7 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../utils/tokenUtils.js";
+import transporter from "../config/nodemailer.js";
 
 export const register = async (req, res, next) => {
   try {
@@ -22,6 +23,17 @@ export const register = async (req, res, next) => {
       password,
     });
 
+    // Send verification email
+
+    const mailOption = {
+      from: process.env.SENDER_EMAIL,
+      to: email,
+      subject: "Welcome to our website",
+      text: `Your account has been created with email: ${email}`,
+    };
+
+    await transporter.sendMail(mailOption);
+
     return res.status(200).json({
       success: true,
       data: {
@@ -35,11 +47,74 @@ export const register = async (req, res, next) => {
   }
 };
 
-export const login = async (req, res, next) => {
+// send otp
+export const loginStepOne = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.login(email, password);
+
+    if (user.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Please verify your email before logging in.",
+      });
+    }
+
+    // Generate otp
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    user.otp = otp;
+    user.otpExpiredAt = Date.now() + 5 * 60 * 1000;
+    await user.save();
+
+    //Send otp via email
+    const mailOption = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Your 2FA Login OTP",
+      text: `Your OTP for login is: ${otp}`,
+    };
+
+    await transporter.sendMail(mailOption);
+
+    return res.status(200).json({
+      success: true,
+      message: "OTP sent to your email. Please verify to complete login.",
+      userId: user._id, // Frontend uses this for next step
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// send token after verification
+export const verifyLoginOtp = async (req, res, next) => {
+  try {
+    const { userId, otp } = req.body;
+
+    if (!userId || !otp) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing userId or OTP" });
+    }
+
+    const user = await User.findById(userId).select("+otp +otpExpiredAt");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    if (!user.otp || user.otp !== otp) {
+      return res.status(401).json({ success: false, message: "Invalid OTP" });
+    }
+
+    if (user.otpExpiredAt < Date.now()) {
+      return res.status(401).json({ success: false, message: "OTP expired" });
+    }
+
+    (user.otp = ""), (user.otpExpiredAt = undefined);
 
     const newAccessToken = generateAccessToken(user);
     const newrefreshToken = generateRefreshToken(user);

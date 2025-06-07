@@ -34,10 +34,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    // otpExpiredAt: {
-    //   type: Date,
-    //   select: false,
-    // },
+    otpExpiredAt: {
+      type: Date,
+      select: false,
+    },
   },
   { timestamps: true }
 );
