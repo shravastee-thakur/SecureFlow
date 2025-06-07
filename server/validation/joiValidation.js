@@ -17,6 +17,7 @@ export const registerSchema = (req, res, next) => {
       "string.empty": "Password is required",
       "string.min": "Password must be at least 6 characters",
     }),
+    role: joi.string(),
   });
 
   const { error } = schema.validate(req.body);

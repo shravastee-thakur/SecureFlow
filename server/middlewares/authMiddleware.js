@@ -3,7 +3,7 @@ import User from "../models/userModel.js";
 
 export const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization || "Authorization";
+    const authHeader = req.headers.Authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res
         .status(401)
@@ -30,6 +30,7 @@ export const authenticate = async (req, res, next) => {
 
     req.user = {
       id: user._id,
+      role: user.role,
     };
 
     next();

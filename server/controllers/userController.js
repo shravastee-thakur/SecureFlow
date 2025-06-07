@@ -8,7 +8,7 @@ import transporter from "../config/nodemailer.js";
 
 export const register = async (req, res, next) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -21,6 +21,7 @@ export const register = async (req, res, next) => {
       name,
       email,
       password,
+      role,
     });
 
     // Send verification email
@@ -39,6 +40,7 @@ export const register = async (req, res, next) => {
       data: {
         name: user.name,
         email: user.email,
+        role: user.role,
       },
       message: "User created successfully",
     });
@@ -54,7 +56,7 @@ export const loginStepOne = async (req, res, next) => {
 
     const user = await User.login(email, password);
 
-    if (user.isVerified) {
+    if (!user.isVerified) {
       return res.status(403).json({
         success: false,
         message: "Please verify your email before logging in.",
@@ -65,7 +67,7 @@ export const loginStepOne = async (req, res, next) => {
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
     user.otp = otp;
-    user.otpExpiredAt = Date.now() + 5 * 60 * 1000;
+    user.otpExpiredAt = new Date(Date.now() + 5 * 60 * 1000);
     await user.save();
 
     //Send otp via email
@@ -114,6 +116,7 @@ export const verifyLoginOtp = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "OTP expired" });
     }
 
+    user.isVerified = true;
     (user.otp = ""), (user.otpExpiredAt = undefined);
 
     const newAccessToken = generateAccessToken(user);
