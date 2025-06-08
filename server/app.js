@@ -9,14 +9,15 @@ import userRoutes from "./routes/userRoutes.js";
 const app = express();
 
 //Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(
   cors({
     origin: "http://localhost:5173",
     credentials: true,
+    exposedHeaders: ["set-cookie"],
   })
 );
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

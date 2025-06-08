@@ -7,6 +7,9 @@ import {
 import transporter from "../config/nodemailer.js";
 import crypto from "crypto";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 export const register = async (req, res, next) => {
   try {
     const { name, email, password, role } = req.body;
@@ -77,7 +80,7 @@ export const loginStepOne = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "OTP sent to your email. Please verify to complete login.",
-      userId: user._id, // Frontend uses this for next step
+      userId: user._id,
     });
   } catch (error) {
     next(error);
@@ -87,6 +90,7 @@ export const loginStepOne = async (req, res, next) => {
 // send token after verification
 export const verifyLoginOtp = async (req, res, next) => {
   try {
+    console.log("Cookies received:", req.cookies);
     const { userId, otp } = req.body;
 
     if (!userId || !otp) {
@@ -126,8 +130,8 @@ export const verifyLoginOtp = async (req, res, next) => {
       .status(200)
       .cookie("refreshToken", newrefreshToken, {
         httpOnly: true,
-        sameSite: "strict",
-        secure: true,
+        sameSite: "lax",
+        secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({ success: true, accessToken: newAccessToken });
@@ -164,8 +168,8 @@ export const refreshTokenHandler = async (req, res, next) => {
       .status(200)
       .cookie("refreshToken", newrefreshToken, {
         httpOnly: true,
-        sameSite: "strict",
-        secure: true,
+        sameSite: "lax",
+        secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({ success: true, accessToken: newAccessToken });
@@ -229,7 +233,7 @@ export const forgotPasswordRequest = async (req, res, next) => {
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
     await user.save();
 
-    const resetLink = `http://localhost:5000/reset-password?token=${resetToken}&id=${user._id}`;
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&id=${user._id}`;
 
     const mailOption = {
       from: process.env.SENDER_EMAIL,
