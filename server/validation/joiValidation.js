@@ -68,3 +68,31 @@ export const otpVerificationSchema = (req, res, next) => {
 
   next();
 };
+
+export const resetPasswordRequestSchema = (req, res, next) => {
+  const schema = joi.object({
+    email: joi.string().trim().email().required(),
+  });
+
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+
+  next();
+};
+
+export const resetPasswordSchema = (req, res, next) => {
+  const schema = joi.object({
+    token: joi.string().required(),
+    userId: joi.string().required(),
+    newPassword: joi.string().min(6).required(),
+  });
+
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ success: false, message: error.message });
+  }
+
+  next();
+};

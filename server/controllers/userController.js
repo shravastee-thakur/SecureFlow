@@ -5,6 +5,7 @@ import {
   verifyRefreshToken,
 } from "../utils/tokenUtils.js";
 import transporter from "../config/nodemailer.js";
+import crypto from "crypto";
 
 export const register = async (req, res, next) => {
   try {
@@ -56,13 +57,6 @@ export const loginStepOne = async (req, res, next) => {
 
     const user = await User.login(email, password);
 
-    if (!user.isVerified) {
-      return res.status(403).json({
-        success: false,
-        message: "Please verify your email before logging in.",
-      });
-    }
-
     // Generate otp
 
     const otp = String(Math.floor(100000 + Math.random() * 900000));
@@ -75,7 +69,7 @@ export const loginStepOne = async (req, res, next) => {
       from: process.env.SENDER_EMAIL,
       to: user.email,
       subject: "Your 2FA Login OTP",
-      text: `Your OTP for login is: ${otp}`,
+      text: `Your OTP for login is: ${otp}, expires in 5 mins`,
     };
 
     await transporter.sendMail(mailOption);
@@ -116,7 +110,10 @@ export const verifyLoginOtp = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "OTP expired" });
     }
 
-    user.isVerified = true;
+    if (!user.isVerified) {
+      user.isVerified = true;
+    }
+
     (user.otp = ""), (user.otpExpiredAt = undefined);
 
     const newAccessToken = generateAccessToken(user);
@@ -172,6 +169,108 @@ export const refreshTokenHandler = async (req, res, next) => {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({ success: true, accessToken: newAccessToken });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const changePassword = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const isMatch = await user.comparePassword(oldPassword);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Old password is incorrect" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const forgotPasswordRequest = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    const resetLink = `http://localhost:5000/reset-password?token=${resetToken}&id=${user._id}`;
+
+    const mailOption = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Reset Your Password",
+      text: `Click to reset your password: ${resetLink}`,
+    };
+
+    await transporter.sendMail(mailOption);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password reset link sent to your email",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { token, userId, newPassword } = req.body;
+
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+    const user = await User.findOne({
+      _id: userId,
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: { $gt: Date.now() },
+    }).select("+password");
+
+    if (!user) {
+      return res.status(400).json({ message: "Token is invalid or expired" });
+    }
+
+    user.password = newPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: "Password reset successful" });
   } catch (error) {
     next(error);
   }

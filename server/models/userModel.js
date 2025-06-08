@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       select: false,
     },
+    resetPasswordToken: {
+      type: String,
+      select: false
+    },
+    resetPasswordExpires: {
+      type: Date,
+      select: false
+    },
   },
   { timestamps: true }
 );
@@ -54,7 +62,7 @@ userSchema.methods.comparePassword = async function (plainPassword) {
 };
 
 userSchema.statics.login = async function (email, password) {
-  const user = await this.findOne({ email }).select("+password");
+  const user = await this.findOne({ email }).select("+password +isVerified");
   if (!user) throw new Error("Invalid email or password");
 
   const isMatch = await user.comparePassword(password);
