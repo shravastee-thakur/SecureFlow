@@ -116,6 +116,28 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (userId, token, newPassword) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/user/resetPassword",
+        {
+          userId,
+          token,
+          newPassword,
+        },
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (res.data.success) {
+        return true;
+      }
+    } catch (error) {
+      console.error("Reset Password Error:", error);
+    }
+  };
+
   const logout = async () => {
     if (!accessToken) return;
     try {
@@ -148,6 +170,7 @@ const AuthProvider = ({ children }) => {
           data,
           logout,
           forgotPassword,
+          resetPassword,
         }}
       >
         {children}

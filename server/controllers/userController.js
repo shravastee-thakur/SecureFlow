@@ -6,7 +6,6 @@ import {
 } from "../utils/tokenUtils.js";
 import transporter from "../config/nodemailer.js";
 import crypto from "crypto";
-
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -233,7 +232,6 @@ export const changePassword = async (req, res, next) => {
 export const forgotPasswordRequest = async (req, res, next) => {
   try {
     const { email } = req.body;
-    console.log("EMAIL RECEIVED:", email);
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -252,6 +250,10 @@ export const forgotPasswordRequest = async (req, res, next) => {
     await user.save();
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}&id=${user._id}`;
+
+    console.log("RESET LINK:", resetLink);
+    console.log("Stored hashedToken:", user.resetPasswordToken);
+    console.log("Expires at:", new Date(user.resetPasswordExpires));
 
     const mailOption = {
       from: process.env.SENDER_EMAIL,
@@ -275,14 +277,17 @@ export const forgotPasswordRequest = async (req, res, next) => {
 export const resetPassword = async (req, res, next) => {
   try {
     const { token, userId, newPassword } = req.body;
-
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
+    console.log("Received userId:", userId);
+    console.log("Received token:", token);
+    console.log("Hashed incoming token:", hashedToken);
+
     const user = await User.findOne({
-      _id: userId,
-      resetPasswordToken: hashedToken,
+      _id: userId, // No need for mongoose.Types.ObjectId if userId is already valid
+      resetPasswordToken: hashedToken, // Compare directly with stored hashed token
       resetPasswordExpires: { $gt: Date.now() },
-    }).select("+password");
+    });
 
     if (!user) {
       return res.status(400).json({ message: "Token is invalid or expired" });
@@ -293,12 +298,13 @@ export const resetPassword = async (req, res, next) => {
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: "Password reset successful" });
+    res
+      .status(200)
+      .json({ success: true, message: "Password reset successful" });
   } catch (error) {
     next(error);
   }
 };
-
 export const logout = async (req, res, next) => {
   try {
     const token = req.cookies.refreshToken;
