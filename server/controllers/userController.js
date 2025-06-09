@@ -90,7 +90,6 @@ export const loginStepOne = async (req, res, next) => {
 // send token after verification
 export const verifyLoginOtp = async (req, res, next) => {
   try {
-    console.log("Cookies received:", req.cookies);
     const { userId, otp } = req.body;
 
     if (!userId || !otp) {
@@ -134,7 +133,16 @@ export const verifyLoginOtp = async (req, res, next) => {
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ success: true, accessToken: newAccessToken });
+      .json({
+        success: true,
+        accessToken: newAccessToken,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
   } catch (error) {
     next(error);
   }
@@ -172,7 +180,16 @@ export const refreshTokenHandler = async (req, res, next) => {
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ success: true, accessToken: newAccessToken });
+      .json({
+        success: true,
+        accessToken: newAccessToken,
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+        },
+      });
   } catch (error) {
     next(error);
   }
@@ -216,6 +233,7 @@ export const changePassword = async (req, res, next) => {
 export const forgotPasswordRequest = async (req, res, next) => {
   try {
     const { email } = req.body;
+    console.log("EMAIL RECEIVED:", email);
 
     const user = await User.findOne({ email });
     if (!user) {
@@ -247,6 +265,7 @@ export const forgotPasswordRequest = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Password reset link sent to your email",
+      resetLink,
     });
   } catch (error) {
     next(error);

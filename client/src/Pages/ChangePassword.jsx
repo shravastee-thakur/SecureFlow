@@ -17,19 +17,6 @@ const ChangePassword = () => {
               name="password"
               //   value={user.password}
             />
-            {/* <div className="absolute top-9 right-3">
-              {!showPassword ? (
-                <VisibilityOffIcon
-                  
-                  fontSize="small"
-                />
-              ) : (
-                <VisibilityIcon
-                 
-                  fontSize="small"
-                />
-              )}
-            </div> */}
           </div>
           <div className="flex flex-col gap-1 mt-2 relative">
             <label className="text-sm font-semibold">Password</label>
@@ -41,19 +28,6 @@ const ChangePassword = () => {
               name="password"
               //   value={user.password}
             />
-            {/* <div className="absolute top-9 right-3">
-              {!showPassword ? (
-                <VisibilityOffIcon
-                  
-                  fontSize="small"
-                />
-              ) : (
-                <VisibilityIcon
-                 
-                  fontSize="small"
-                />
-              )}
-            </div> */}
           </div>
 
           <div className="flex flex-col gap-1 mt-4 ">

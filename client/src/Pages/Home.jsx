@@ -11,7 +11,7 @@ const Home = () => {
     email: "",
     password: "",
   });
-  const { login } = useContext(AuthContext);
+  const { login, forgetPassword } = useContext(AuthContext);
 
   const handleChange = (e) => {
     e.preventDefault();
@@ -76,6 +76,7 @@ const Home = () => {
               )}
             </div>
           </div>
+
           <p className="text-right text-sm font-semibold text-indigo-600">
             <NavLink to={"/forget-password"}>Forget password?</NavLink>
           </p>

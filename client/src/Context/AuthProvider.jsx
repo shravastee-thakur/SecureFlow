@@ -1,11 +1,39 @@
-import { createContext, useState } from "react";
+import { createContext, useEffect, useState } from "react";
 
 import axios from "axios";
 
 export const AuthContext = createContext();
 const AuthProvider = ({ children }) => {
   const [userId, setUserId] = useState(null);
+  const [data, setData] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
+
+  useEffect(() => {
+    const getaccessToken = async () => {
+      try {
+        const res = await axios.post(
+          "http://localhost:5000/api/v1/user/refresh",
+          {},
+          {
+            withCredentials: true,
+          }
+        );
+
+        if (res.data.success) {
+          setAccessToken(res.data.accessToken);
+          setData(res.data.user);
+        }
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          // Do nothing, user not logged in
+        } else {
+          console.error("Error during refresh token check:", error);
+        }
+      }
+    };
+
+    getaccessToken();
+  }, []);
 
   const login = async (userData) => {
     try {
@@ -34,10 +62,11 @@ const AuthProvider = ({ children }) => {
           withCredentials: true,
         }
       );
-      console.log(res);
+      console.log(res.data);
 
       if (res.data.success) {
         setAccessToken(res.data.accessToken);
+        setData(res.data.user);
         return true;
       }
     } catch (error) {
@@ -45,9 +74,82 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  // const forgetPassword = async (email) => {
+  //   try {
+  //     const res = await axios.post(
+  //       "http://localhost:5000/api/v1/user/forgotPassword",
+  //       { email },
+  //       {
+  //         withCredentials: true,
+  //       }
+  //     );
+  //     if (res.data.success) {
+  //       return true;
+  //     }
+  //   } catch (error) {
+  //     console.error(
+  //       "Forget Password Error:",
+  //       error.response?.data || error.message
+  //     );
+  //     return false;
+  //   }
+  // };
+
+  const forgotPassword = async (email) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/user/forgotPassword",
+        { email },
+        {
+          withCredentials: true, // optional
+        }
+      );
+      if (res.data.success) {
+        return true;
+      }
+    } catch (error) {
+      console.error(
+        "Forget Password Error:",
+        error.response?.data || error.message
+      );
+      return false;
+    }
+  };
+
+  const logout = async () => {
+    if (!accessToken) return;
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/user/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      if (res.data.success) {
+        setUserId(null);
+        setAccessToken(null);
+        setData(null);
+      }
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+  };
+
   return (
     <>
-      <AuthContext.Provider value={{ userId, login, accessToken, otpVerify }}>
+      <AuthContext.Provider
+        value={{
+          userId,
+          login,
+          accessToken,
+          otpVerify,
+          data,
+          logout,
+          forgotPassword,
+        }}
+      >
         {children}
       </AuthContext.Provider>
     </>

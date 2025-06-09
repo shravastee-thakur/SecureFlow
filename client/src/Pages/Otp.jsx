@@ -13,11 +13,11 @@ const Otp = () => {
     if (success) {
       alert("Logged in successfully");
       setOtp("");
-      navigate("/change-password");
+      navigate("/welcome");
     }
   };
   return (
-    <div className="flex items-center justify-center h-screen bg-slate-100">
+    <div className="flex items-center justify-center mt-40">
       <form
         onSubmit={handleOtpSubmit}
         className="bg-white p-6 rounded-xl shadow-md w-80"
