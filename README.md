@@ -1,7 +1,7 @@
 # SecureFlow
 ### MERN Authentication API
 
-A secure, robust, and modern authentication backend built with the MERN stack (MongoDB, Express.js, and Node.js). This API provides a comprehensive set of authentication features, including JWT-based authentication, multi-factor authentication (MFA) with OTP via email, and a secure password management flow.
+A secure, robust, and modern authentication backend built with the MERN stack (MongoDB, Express.js, and Node.js) and Tailwind CSS. This API provides a comprehensive set of authentication features, including JWT-based authentication, multi-factor authentication (MFA) with OTP via email, and a secure password management flow.
 
 ## Features
 
