@@ -29,7 +29,7 @@ const App = () => {
               <Route path="/otp" element={<Otp />} />
               <Route path="/forget-password" element={<ForgetPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/change-password" element={<ChangePassword />} />
+
               <Route path="*" element={<Navigate to="/" />} />
             </>
           )}
@@ -38,6 +38,7 @@ const App = () => {
           {accessToken && (
             <>
               <Route path="/welcome" element={<Welcome />} />
+              <Route path="/change-password" element={<ChangePassword />} />
 
               {/* Admin-only route */}
               {data?.role === "admin" ? (

@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { AuthContext } from "../Context/AuthProvider";
-import { useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Welcome = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ const Welcome = () => {
         )}
 
         <button className="bg-orange-500 hover:bg-orange-600 text-white cursor-pointer rounded-xl px-3 py-2">
-          Change Password
+          <NavLink to={"/change-password"}>Change Password</NavLink>
         </button>
         <button
           onClick={handleLogout}

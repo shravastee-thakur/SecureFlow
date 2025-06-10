@@ -138,6 +138,26 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (oldPassword, newPassword) => {
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/v1/user/changePassword",
+        { oldPassword, newPassword },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          withCredentials: true,
+        }
+      );
+      if (res.data.success) {
+        return true;
+      }
+    } catch (error) {
+      console.error("Change Password Error:", error);
+    }
+  };
+
   const logout = async () => {
     if (!accessToken) return;
     try {
@@ -171,6 +191,7 @@ const AuthProvider = ({ children }) => {
           logout,
           forgotPassword,
           resetPassword,
+          changePassword,
         }}
       >
         {children}
